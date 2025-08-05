@@ -1,0 +1,17 @@
+# Dependencies downloaded by npm
+/frontend/node_modules
+
+# Compiled JavaScript and CSS build output
+/frontend/build
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# IDE configuration folders
+.vscode/
+.idea/
+
+# Log files
+npm-debug.log
+yarn-error.log
