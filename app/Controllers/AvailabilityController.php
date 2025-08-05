@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Controllers;
+use App\Models\Availability;
+
 
 class AvailabilityController {
 
@@ -33,41 +35,29 @@ class AvailabilityController {
     }
 
     public function get_items( $request ) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'am_availability';
         $user_id = get_current_user_id();
-
-        $results = $wpdb->get_results(
-            $wpdb->prepare( "SELECT * FROM $table_name WHERE approver_id = %d ORDER BY start_time DESC", $user_id )
-        );
-
+        $results = Availability::get_by_approver_id( $user_id );
         return new \WP_REST_Response( $results, 200 );
     }
 
-    public function create_item( $request ) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'am_availability';
+      public function create_item( $request ) {
         $user_id = get_current_user_id();
-
         $params = $request->get_json_params();
         $start_time = sanitize_text_field( $params['start_time'] );
         $end_time = sanitize_text_field( $params['end_time'] );
 
-        // Basic validation
+        // Business logic/validation stays in the controller
         if ( strtotime( $start_time ) >= strtotime( $end_time ) ) {
             return new \WP_Error( 'invalid_times', 'End time must be after start time.', [ 'status' => 400 ] );
         }
 
-        $wpdb->insert(
-            $table_name,
-            [
-                'approver_id' => $user_id,
-                'start_time'  => $start_time,
-                'end_time'    => $end_time,
-                'created_at'  => current_time( 'mysql', 1 ),
-            ]
-        );
+        $insert_id = Availability::create([
+            'approver_id' => $user_id,
+            'start_time'  => $start_time,
+            'end_time'    => $end_time,
+            'created_at'  => current_time( 'mysql', 1 ),
+        ]);
 
-        return new \WP_REST_Response( [ 'success' => true, 'id' => $wpdb->insert_id ], 201 );
+        return new \WP_REST_Response( [ 'success' => true, 'id' => $insert_id ], 201 );
     }
 }

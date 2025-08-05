@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Controllers;
+use App\Models\Appointment; // Use the model
+
 
 class AdminApprovalController {
     public function __construct() {
@@ -35,6 +37,17 @@ class AdminApprovalController {
             'tan-all-appointments',  // Menu Slug
             [ $this, 'render_all_appointments_page' ] // NEW Function
         );
+
+        add_submenu_page(
+            'tan-main-admin-page',   // Parent Slug
+            'Setup Guide',           // Page Title
+            'Setup Guide',           // Menu Title
+            'manage_options',        // Capability
+            'tan-setup-guide',       // Menu Slug
+            [ $this, 'render_setup_guide_page' ] // NEW Function
+        );
+
+
         // add_menu_page(
         //     'Pending Approvals',
         //     'Appointment Admin',
@@ -45,6 +58,12 @@ class AdminApprovalController {
         //     30
         // );
     }
+
+
+    public function render_setup_guide_page() {
+        include_once APPOINTMENT_MANAGER_PATH . 'templates/admin-setup-guide.php';
+    }
+
 
     public function render_pending_approvals_page() {
         // Handle approval/rejection actions
@@ -72,26 +91,9 @@ class AdminApprovalController {
 
 
     public function render_all_appointments_page() {
-        global $wpdb;
-        $appointments_table = $wpdb->prefix . 'am_appointments';
-        $users_table = $wpdb->prefix . 'users';
-
-        // Query to get all appointments with user names
-        $all_appointments = $wpdb->get_results(
-            "SELECT 
-                a.*, 
-                approver.display_name as approver_name, 
-                requester.display_name as requester_name 
-            FROM $appointments_table a
-            LEFT JOIN $users_table approver ON a.approver_id = approver.ID
-            LEFT JOIN $users_table requester ON a.requester_id = requester.ID
-            ORDER BY a.start_time DESC"
-        );
-        
-        // Render the new view
+        $all_appointments = Appointment::get_all_with_user_details();
         include_once APPOINTMENT_MANAGER_PATH . 'templates/admin-all-appointments.php';
     }
-
 
 
     private function handle_actions() {

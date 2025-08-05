@@ -209,9 +209,7 @@ const MyAppointments = () => {
               <p>
                 <strong>Approver:</strong> {app.approver_name}
               </p>
-              <p>
-                <strong>Approver:</strong> {app.approver_name}
-              </p>
+
               {(() => {
                 const startTime = new Date(app.start_time);
                 const endTime = new Date(app.end_time);

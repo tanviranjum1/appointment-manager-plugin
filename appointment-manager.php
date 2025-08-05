@@ -22,18 +22,25 @@ define('TAN_APPOINTMENT_CONTEXTS', serialize(['School', 'Hospital', 'Court']));
 // Define Plugin Version
 define( 'APPOINTMENT_MANAGER_VERSION', '1.0.0' );
 define( 'APPOINTMENT_MANAGER_PATH', plugin_dir_path( __FILE__ ) );
-define( 'APPOINTMENT_MANAGER_URL', plugin_dir_url( __FILE__ ) ); // Add this new constant
+define( 'APPOINTMENT_MANAGER_URL', plugin_dir_url( __FILE__ ) );
 
-// Include dependencies
+// --- START OF THE FIX ---
+// Include all dependencies, including the new Models.
 require_once APPOINTMENT_MANAGER_PATH . 'includes/class-activator.php';
-require_once APPOINTMENT_MANAGER_PATH . 'app/Services/EmailService.php'; // Add this line
+require_once APPOINTMENT_MANAGER_PATH . 'app/Services/EmailService.php';
+require_once APPOINTMENT_MANAGER_PATH . 'app/Services/RoleService.php';
+
+// **These lines are essential for the Models to be found**
+require_once APPOINTMENT_MANAGER_PATH . 'app/Models/Availability.php';
+require_once APPOINTMENT_MANAGER_PATH . 'app/Models/Appointment.php';
+
 require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/UserController.php';
 require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/AdminApprovalController.php';
-require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/AvailabilityController.php'; // Add this line
-require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/BookingController.php'; // Add this line
-require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/AppointmentController.php'; // Add this line
+require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/AvailabilityController.php';
+require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/BookingController.php';
+require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/AppointmentController.php';
 require_once APPOINTMENT_MANAGER_PATH . 'includes/class-shortcodes.php';
-
+// --- END OF THE FIX ---
 
 /**
  * The code that runs during plugin activation.
@@ -42,7 +49,6 @@ function activate_appointment_manager() {
     \Includes\Activator::activate();
 }
 register_activation_hook( __FILE__, 'activate_appointment_manager' );
-
 
 /**
  * Main plugin class
@@ -59,9 +65,9 @@ final class Appointment_Manager {
         // Initialize controllers and shortcodes
         new \App\Controllers\UserController();
         new \App\Controllers\AdminApprovalController();
-        new \App\Controllers\AvailabilityController(); // Add this line
-        new \App\Controllers\BookingController(); // ✅ Add this line
-        new \App\Controllers\AppointmentController(); // And add this line
+        new \App\Controllers\AvailabilityController();
+        new \App\Controllers\BookingController();
+        new \App\Controllers\AppointmentController();
         new \Includes\Shortcodes();
     }
 }

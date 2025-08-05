@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Controllers;
+use App\Models\Availability;
+use App\Models\Appointment;
 
 class BookingController {
     public function __construct() {
@@ -72,36 +74,22 @@ class BookingController {
     }
 
     public function get_approver_availability( $request ) {
-        global $wpdb;
         $approver_id = (int) $request['id'];
 
-        // Get all booked slots for this approver that are still active
-        $booked_slots_table = $wpdb->prefix . 'am_appointments';
-        $booked_slots = $wpdb->get_col( $wpdb->prepare(
-            "SELECT start_time FROM $booked_slots_table WHERE approver_id = %d AND status IN ('pending', 'approved')", // This query is now correct
-            $approver_id
-        ));
+        // Get data from models
+        $booked_slots = Appointment::get_active_booked_slots_for_approver( $approver_id );
+        $all_slots = Availability::get_by_approver_id( $approver_id );
 
-        
-        // Get all available slots for this approver
-        $availability_table = $wpdb->prefix . 'am_availability';
-        $all_slots = $wpdb->get_results( $wpdb->prepare(
-            "SELECT * FROM $availability_table WHERE approver_id = %d AND start_time > NOW()",
-            $approver_id
-        ));
-
-        // Filter out the booked slots
+        // Business logic stays in the controller
         $available_slots = array_filter($all_slots, function($slot) use ($booked_slots) {
-            return !in_array($slot->start_time, $booked_slots);
+            return new \DateTime($slot->start_time) > new \DateTime() && !in_array($slot->start_time, $booked_slots);
         });
 
         return new \WP_REST_Response( array_values($available_slots), 200 );
     }
 
-    public function create_appointment( $request ) {
-        global $wpdb;
+     public function create_appointment( $request ) {
         $params = $request->get_json_params();
-
         $approver_id = isset($params['approver_id']) ? intval($params['approver_id']) : 0;
         $start_time  = isset($params['start_time']) ? sanitize_text_field($params['start_time']) : '';
         $end_time    = isset($params['end_time']) ? sanitize_text_field($params['end_time']) : '';
@@ -109,23 +97,17 @@ class BookingController {
         $requester_id = get_current_user_id();
 
         // Server-side validation to ensure reason is not empty
-        if ( empty( trim( $reason ) ) ) {
+       if ( empty( trim( $reason ) ) ) {
             return new \WP_Error('missing_reason', 'A reason for the appointment is required.', ['status' => 400]);
         }
 
-       // Server-side check for double booking, now also checks status
-        $table_name = $wpdb->prefix . 'am_appointments';
-        $existing = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM $table_name WHERE approver_id = %d AND start_time = %s AND status IN ('pending', 'approved')",
-            $approver_id, $start_time
-        ));
-        // --- END OF THE FIX ---
-
-        if ($existing) {
+         // Check for double booking using the model
+        if ( Appointment::check_if_slot_is_booked( $approver_id, $start_time ) ) {
             return new \WP_Error('double_booking', 'This slot has just been booked. Please choose another.', ['status' => 409]);
-        }
+        }        
         
-        $wpdb->insert( $table_name, [
+        
+        $insert_id = Appointment::create([
             'approver_id'  => $approver_id,
             'requester_id' => $requester_id,
             'start_time'   => $start_time,
@@ -135,7 +117,6 @@ class BookingController {
              'reason'       => $reason, // Insert the reason
         ]);
 
-                $insert_id = $wpdb->insert_id;
 
 
          // --- START OF PHASE 6 ADDITION ---
