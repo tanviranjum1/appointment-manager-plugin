@@ -56,12 +56,19 @@ export const createAvailability = (startTime, endTime) => {
 /**
  * Fetches appointments for the current logged-in user (role-dependent).
  */
-export const fetchMyAppointments = () => {
-  return fetch(`${api_url}my-appointments`, {
+export const fetchMyAppointments = (statusFilter = "", page = 1) => {
+  const url = new URL(`${api_url}my-appointments`);
+
+  // Only add the 'status' parameter if a filter is actually selected
+  if (statusFilter) {
+    url.searchParams.append("status", statusFilter);
+  }
+  url.searchParams.append("page", page);
+
+  return fetch(url.toString(), {
     headers: { "X-WP-Nonce": nonce },
   }).then(handleResponse);
 };
-
 /**
  * Creates a new appointment request.
  * @param {object} bookingData - Contains approver_id, start_time, end_time, reason

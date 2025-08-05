@@ -4,8 +4,6 @@ namespace App\Controllers;
 
 class UserController {
 
-
-
     public function __construct() {
         add_action( 'init', [ $this, 'handle_registration' ] );
     }
@@ -19,12 +17,15 @@ class UserController {
         $email    = sanitize_email( $_POST['tan_email'] );
         $password = $_POST['tan_password'];
         $role     = sanitize_text_field( $_POST['tan_role'] );
-                $context  = sanitize_text_field( $_POST['tan_context'] ); // Get the context
+        $context  = sanitize_text_field( $_POST['tan_context'] );
 
 
-   // Validate the selected context against our defined list
-        $allowed_contexts = unserialize(TAN_APPOINTMENT_CONTEXTS);
-        if ( ! in_array($context, $allowed_contexts) ) {
+
+          $allowed_contexts = get_option('tan_appointment_contexts', []);
+
+             // Validate the selected context against our defined list
+
+        if ( ! is_array($allowed_contexts) || ! in_array($context, $allowed_contexts) ) {
             $this->redirect_with_error( 'Invalid context selected.' );
             return;
         }

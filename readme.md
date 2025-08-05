@@ -1,6 +1,6 @@
 # Appointment Management System - WordPress Plugin
 
-A flexible, reusable WordPress plugin that provides a complete system for managing appointments within different contexts (e.g., School, Hospital, Court). It allows certain users ("Approvers") to set their availability, and other users ("Requesters") from the same context to book appointments. The system includes an admin approval workflow for new Approvers, a full email notification system, and a detailed appointment cancellation workflow.
+A flexible, reusable WordPress plugin that provides a complete system for managing appointments within different contexts (e.g., School, Hospital, Court). It allows certain users ("Approvers") to set their availability, and other users ("Requesters") from the same context to book appointments. The system includes an admin approval workflow, a full email notification system, and a detailed appointment cancellation workflow.
 
 ## For Users: How to Use the Plugin
 
@@ -19,7 +19,7 @@ To use the Appointment Management System on your WordPress site, create the foll
 
 - **Purpose:** The main dashboard for Approvers to set their available time slots for appointments.
 - **Shortcode:** `[tan_approver_portal]`
-- **How it works:** Only logged-in, approved users with the "Approver" role can see this page. They can input dates and times to create their schedule.
+- **How it works:** Only logged-in, approved users with the "Approver" role can see this page.
 
 ### 3. Book an Appointment (For Requesters Only)
 
@@ -32,7 +32,7 @@ To use the Appointment Management System on your WordPress site, create the foll
 - **Purpose:** A unified dashboard to view and manage appointments.
 - **Shortcode:** `[tan_my_appointments]`
 - **How it works:**
-  - **If you are an Approver:** This page lists your incoming appointments. You can "Approve," "Reject," or "Cancel" pending requests. You can also cancel already approved appointments at any time.
+  - **If you are an Approver:** This page lists your incoming appointments. You can "Approve," "Reject," or "Cancel" pending requests. You can also cancel already approved appointments.
   - **If you are a Requester:** This page lists your sent requests and their status. You can cancel a **pending** appointment, but only if it is more than 24 hours away.
   - If an appointment is cancelled, the page will show who performed the cancellation.
 
@@ -40,9 +40,10 @@ To use the Appointment Management System on your WordPress site, create the foll
 
 - **Purpose:** For Site Administrators to manage the system.
 - **Location:** WordPress Admin -> Appointment Admin
-- **How it works:** This menu contains two pages:
+- **How it works:** This menu contains three pages:
   - **Pending Approvals:** A queue to approve or reject new Approver registrations.
-  - **All Appointments:** A master log of every appointment in the system, showing its status, participants, and other details.
+  - **All Appointments:** A master log of every appointment in the system.
+  - **Setup Guide:** A helpful guide for admins on how to create the necessary pages with shortcodes.
 
 ## For Developers: Getting Started & Contributing
 
@@ -58,24 +59,11 @@ This section provides instructions for setting up a development environment and 
 
 1.  Clone this repository into your WordPress `wp-content/plugins/` directory.
 2.  Navigate to the plugin's `frontend/` directory in your terminal: `cd wp-content/plugins/appointment-manager/frontend/`.
-3.  Install JavaScript packages. This includes the libraries for the upcoming visual calendar feature.
-    ```bash
-    npm install
-    npm install --save @fullcalendar/react @fullcalendar/daygrid @fullcalendar/timegrid @fullcalendar/interaction
-    ```
+3.  Install JavaScript packages: `npm install`.
 4.  For active development, run: `npm run start`.
 5.  To create a production build, run: `npm run build`.
 6.  Activate the plugin in WordPress.
 7.  **Crucially:** Go to **Settings -> Permalinks** and click "Save Changes" to register the API routes. Deactivate and reactivate the plugin if database changes are needed.
-
-### How to Add a New Feature
-
-This plugin uses a decoupled architecture with a PHP backend providing a REST API and a React frontend for the UI. To add a new feature:
-
-1.  **Database (if needed):** Create a new migration file in `app/Migrations/` and add it to `includes/class-activator.php`. Deactivate/reactivate the plugin to run it.
-2.  **Backend (API):** Create or update a Controller in `app/Controllers/` to handle data logic and register a new REST API endpoint.
-3.  **Frontend (UI):** Create a new React component in `frontend/src/components/`. This component will use `fetch` to communicate with your new API endpoint.
-4.  **Display:** Add a new shortcode in `includes/class-shortcodes.php` to render the `div` for your React component and enqueue the necessary scripts.
 
 ---
 
@@ -86,41 +74,39 @@ Here is a breakdown of the purpose of each file and directory in the plugin.
 ```
 appointment-manager/
 ├── appointment-manager.php         // Main plugin bootstrap file; initializes all components and defines contexts.
-├── uninstall.php                 // Code to clean up database tables and roles on plugin deletion.
 │
 ├── app/                          // Contains all core Object-Oriented PHP application logic.
 │   ├── Controllers/              // Handles REST API requests and business logic.
-│   │   ├── AdminApprovalController.php // Logic for admin pages (Pending Approvals, All Appointments).
-│   │   ├── AppointmentController.php // API for fetching, updating, and cancelling appointments.
-│   │   ├── AvailabilityController.php  // API for an approver's availability.
-│   │   ├── BookingController.php     // API for the context-aware requester booking process.
-│   │   └── UserController.php        // Handles user registration and saving all meta (status, context, etc.).
 │   ├── Migrations/               // Scripts for creating and altering database tables.
-│   │   ├── AddCancelledByToAppointmentsTable.php
-│   │   ├── AddReasonToAppointmentsTable.php
-│   │   ├── CreateAppointmentsTable.php
-│   │   └── CreateAvailabilityTable.php
+│   ├── Models/                   // Classes that handle direct database interactions (CRUD).
+│   │   ├── Appointment.php
+│   │   └── Availability.php
 │   └── Services/                 // Contains specialized, reusable services.
-│       ├── EmailService.php        // Manages the formatting and sending of all emails.
-│       └── RoleService.php         // Handles creating custom user roles on activation.
+│       ├── EmailService.php
+│       └── RoleService.php
 │
 ├── includes/                     // WordPress-specific integration classes.
-│   ├── class-activator.php       // Runs the activation sequence (creates roles, tables, migrations).
-│   └── class-shortcodes.php      // Defines all shortcodes used by the plugin.
+│   ├── class-activator.php       // Runs the activation sequence.
+│   └── class-shortcodes.php      // Defines all shortcodes and enqueues assets.
 │
 ├── templates/                    // Simple PHP files for rendering server-side HTML views.
-│   ├── admin-all-appointments.php// The view for the "All Appointments" admin table.
-│   ├── admin-approvals.php       // The view for the admin approval table.
-│   └── registration-form.php     // The HTML for the user registration form.
+│   ├── admin-all-appointments.php
+│   ├── admin-approvals.php
+│   ├── admin-setup-guide.php
+│   └── registration-form.php
 │
 └── frontend/                     // Contains the entire React frontend application.
-    ├── build/                    // (Ignored by Git) Compiled JavaScript/CSS output goes here.
-    ├── node_modules/             // (Ignored by Git) Holds all Node.js package dependencies.
-    ├── src/
-    │   ├── components/           // Reusable React components.
-    │   │   ├── AvailabilityForm.jsx  // UI for an approver to set their schedule.
-    │   │   ├── BookingForm.jsx     // UI for a requester to book an appointment.
-    │   │   └── MyAppointments.jsx    // UI for the "My Appointments" dashboard.
-    │   └── index.js              // Main entry point for the React application.
-    └── package.json              // Defines project dependencies and scripts for the frontend.
+    ├── build/                    // (Ignored by Git) Compiled JavaScript/CSS output.
+    ├── node_modules/             // (Ignored by Git) Node.js package dependencies.
+    └── src/
+        ├── components/           // React components focused on rendering UI and managing state.
+        │   ├── AvailabilityForm.jsx
+        │   ├── BookingForm.jsx
+        │   └── MyAppointments.jsx
+        ├── services/             // Handles all communication with the backend REST API.
+        │   └── api.js
+        ├── utils/                // Contains reusable helper functions (e.g., for formatting).
+        │   └── formatters.js
+        ├── index.css             // Custom CSS styles for the components.
+        └── index.js              // Main entry point for the React application.
 ```

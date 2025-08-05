@@ -44,13 +44,24 @@ class AppointmentController {
         return is_user_logged_in();
     }
 
-    public function get_items() {
+    public function get_items( $request ) {
         $user = wp_get_current_user();
-        $results = [];
+        $results = ['appointments' => [], 'total_pages' => 1];
+        
+        // --- START OF THE FIX ---
+        // Get filter and pagination params from the request and ensure they are clean.
+        $status_filter = sanitize_text_field($request->get_param('status'));
+        $filters = [];
+        if (!empty($status_filter)) {
+            $filters['status'] = $status_filter;
+        }
+        $page = $request->get_param('page') ? intval($request->get_param('page')) : 1;
+        // --- END OF THE FIX ---
+
         if ( in_array('tan_approver', (array) $user->roles) ) {
-            $results = Appointment::get_by_approver_id( $user->ID );
+            $results = Appointment::get_by_approver_id( $user->ID, $filters, $page );
         } elseif ( in_array('tan_requester', (array) $user->roles) ) {
-            $results = Appointment::get_by_requester_id( $user->ID );
+            $results = Appointment::get_by_requester_id( $user->ID, $filters, $page );
         }
         return new \WP_REST_Response( $results, 200 );
     }

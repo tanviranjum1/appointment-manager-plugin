@@ -1,6 +1,33 @@
 <div class="wrap">
     <h1>All Appointments</h1>
     <p>This page shows a complete log of all appointments in the system.</p>
+
+
+
+    <form method="get">
+        <input type="hidden" name="page" value="tan-all-appointments" />
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <select name="filter_status">
+                <option value="">All Statuses</option>
+                <?php foreach ($all_statuses as $status) : ?>
+                    <option value="<?php echo esc_attr($status); ?>" <?php selected(isset($_GET['filter_status']) ? $_GET['filter_status'] : '', $status); ?>>
+                        <?php echo esc_html(ucfirst($status)); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            
+            <select name="filter_approver">
+                <option value="">All Approvers</option>
+                <?php foreach ($all_approvers as $approver) : ?>
+                    <option value="<?php echo esc_attr($approver->ID); ?>" <?php selected(isset($_GET['filter_approver']) ? $_GET['filter_approver'] : 0, $approver->ID); ?>>
+                        <?php echo esc_html($approver->display_name); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            
+            <input type="submit" class="button" value="Filter">
+        </div>
+    </form>
     <table class="wp-list-table widefat fixed striped">
         <thead>
             <tr>
