@@ -101,7 +101,24 @@ const MyAppointments = () => {
               <strong>Requester:</strong> {app.requester_name}
             </p>
             <p>
-              <strong>Time:</strong> {new Date(app.start_time).toLocaleString()}
+              {(() => {
+                const startTime = new Date(app.start_time);
+                const endTime = new Date(app.end_time);
+                const timeOptions = {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                };
+
+                return (
+                  <p>
+                    <strong>Time:</strong> {startTime.toLocaleDateString()}{" "}
+                    &nbsp;
+                    {startTime.toLocaleTimeString([], timeOptions)} -{" "}
+                    {endTime.toLocaleTimeString([], timeOptions)}
+                  </p>
+                );
+              })()}{" "}
             </p>
             {app.reason && (
               <p>
@@ -193,8 +210,26 @@ const MyAppointments = () => {
                 <strong>Approver:</strong> {app.approver_name}
               </p>
               <p>
-                <strong>Time:</strong> {appointmentDate.toLocaleString()}
+                <strong>Approver:</strong> {app.approver_name}
               </p>
+              {(() => {
+                const startTime = new Date(app.start_time);
+                const endTime = new Date(app.end_time);
+                const timeOptions = {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                };
+
+                return (
+                  <p>
+                    <strong>Time:</strong> {startTime.toLocaleDateString()}{" "}
+                    &nbsp;
+                    {startTime.toLocaleTimeString([], timeOptions)} -{" "}
+                    {endTime.toLocaleTimeString([], timeOptions)}
+                  </p>
+                );
+              })()}
               <p>
                 <strong>Status:</strong>{" "}
                 <span

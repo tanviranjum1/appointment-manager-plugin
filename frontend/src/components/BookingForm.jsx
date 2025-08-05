@@ -2,43 +2,40 @@ import { useState, useEffect } from "@wordpress/element";
 
 const BookingForm = () => {
   const [approvers, setApprovers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedApprover, setSelectedApprover] = useState("");
   const [availability, setAvailability] = useState([]);
+  const [isLoadingSlot, setIsLoadingSlot] = useState(false);
   const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
-  const [reason, setReason] = useState(""); // Add new state for the reason
-  const [isLoadingSlot, setIsLoadingSlot] = useState(false); // New state to show loading on slots
+  const [reason, setReason] = useState("");
+  // 1. Fetch all approvers when the component loads
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(tan_data.api_url + "approvers", {
+      headers: { "X-WP-Nonce": tan_data.nonce },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setApprovers(data);
+        setIsLoading(false);
+      });
+  }, []);
 
   const fetchAvailabilityForSelectedApprover = () => {
-    if (!selectedApprover) return;
-    setIsLoadingSlot(true); // Show loading
+    if (!selectedApprover) {
+      setAvailability([]);
+      return;
+    }
+    setIsLoadingSlot(true);
     fetch(tan_data.api_url + `availability/${selectedApprover}`, {
       headers: { "X-WP-Nonce": tan_data.nonce },
     })
       .then((response) => response.json())
       .then((data) => {
         setAvailability(data);
-        setIsLoadingSlot(false); // Hide loading
+        setIsLoadingSlot(false);
       });
   };
-
-  // 1. Fetch all approvers when the component loads
-  useEffect(() => {
-    setIsLoading(true); // Set loading to true before the fetch
-    fetch(tan_data.api_url + "approvers", {
-      headers: { "X-WP-Nonce": tan_data.nonce },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setApprovers(data);
-          setIsLoading(false); // Set loading to false after fetch is complete
-        } else {
-          console.error("Approvers API returned invalid data:", data);
-          setApprovers([]);
-        }
-      });
-  }, []);
 
   // 2. Fetch availability when an approver is selected
   // useEffect(() => {
@@ -69,11 +66,7 @@ const BookingForm = () => {
       return; // Stop the function if reason is empty
     }
 
-    if (
-      !window.confirm(
-        `Confirm booking for ${new Date(slot.start_time).toLocaleString()}?`
-      )
-    ) {
+    if (!window.confirm(`Confirm booking for this time slot?`)) {
       return;
     }
 
@@ -125,7 +118,11 @@ const BookingForm = () => {
     <div>
       <h2>Book an Appointment</h2>
 
-      {message && <p style={{ color: "green" }}>{message}</p>}
+      {message && (
+        <p style={{ color: message.startsWith("Error:") ? "red" : "green" }}>
+          {message}
+        </p>
+      )}
 
       <div>
         <label>
@@ -151,14 +148,16 @@ const BookingForm = () => {
       {selectedApprover && (
         <div style={{ marginTop: "20px" }}>
           <h3>
-            <strong>2. Provide a Reason for Your Appointment:</strong>
+            <strong>
+              2. Provide a Reason for Your Appointment (Required):
+            </strong>
           </h3>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows="4"
             style={{ width: "100%", marginBottom: "20px" }}
-            placeholder="e.g., Discuss project proposal"
+            placeholder="e.g., Discuss why you need this appointment..."
             required
           ></textarea>
 
@@ -170,27 +169,41 @@ const BookingForm = () => {
             <p>Loading slots...</p>
           ) : availability.length > 0 ? (
             <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-              {availability.map((slot) => (
-                <li
-                  key={slot.id}
-                  style={{
-                    marginBottom: "10px",
-                    padding: "10px",
-                    background: "#f0f0f0",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <span>{new Date(slot.start_time).toLocaleString()}</span>
-                  <button
-                    onClick={() => handleBooking(slot)}
-                    className="button button-primary"
+              {availability.map((slot) => {
+                const startTime = new Date(slot.start_time);
+                const endTime = new Date(slot.end_time);
+                const timeOptions = {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                };
+                const formattedTime = `${startTime.toLocaleDateString()}, ${startTime.toLocaleTimeString(
+                  [],
+                  timeOptions
+                )} - ${endTime.toLocaleTimeString([], timeOptions)}`;
+
+                return (
+                  <li
+                    key={slot.id}
+                    style={{
+                      marginBottom: "10px",
+                      padding: "10px",
+                      background: "#f0f0f0",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
                   >
-                    Book Now
-                  </button>
-                </li>
-              ))}
+                    <span>{formattedTime}</span>
+                    <button
+                      onClick={() => handleBooking(slot)}
+                      className="button button-primary"
+                    >
+                      Book Now
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p>No available slots for this approver.</p>
