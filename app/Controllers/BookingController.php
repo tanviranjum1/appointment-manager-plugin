@@ -35,14 +35,29 @@ class BookingController {
     }
 
     public function get_approvers() {
-        // --- START OF THE FIX ---
+
+        // Get the current user (the Requester) and their context
+        $requester_id = get_current_user_id();
+        $requester_context = get_user_meta($requester_id, 'tan_context', true);
+
+        if ( ! $requester_context ) {
+            // Return an empty array if the requester has no context set
+            return new \WP_REST_Response( [], 200 );
+        }
+
         // Using a more robust meta_query, same as we did for the admin page.
         $users = get_users([
             'role' => 'tan_approver',
-            'meta_query' => [
+             'meta_query' => [
+                'relation' => 'AND', // Both conditions must be true
                 [
                     'key'     => 'tan_status',
                     'value'   => 'active',
+                    'compare' => '=',
+                ],
+                [
+                    'key'     => 'tan_context',
+                    'value'   => $requester_context,
                     'compare' => '=',
                 ],
             ],

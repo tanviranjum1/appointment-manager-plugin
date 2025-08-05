@@ -16,12 +16,15 @@
                     <tr>
                         <td><?php echo esc_html( $user->user_login ); ?></td>
                         <td><?php echo esc_html( $user->user_email ); ?></td>
-                        <td><?php echo esc_html( get_user_meta( $user->ID, 'tan_designation', true ) ); ?></td> <td><?php echo esc_html( get_user_meta( $user->ID, 'tan_institute', true ) ); ?></td>   <td>
-                            </td>
+                        <td><?php echo esc_html( get_user_meta( $user->ID, 'tan_designation', true ) ); ?></td>
+                        <td><?php echo esc_html( get_user_meta( $user->ID, 'tan_institute', true ) ); ?></td>
                         <td>
                             <?php
-                            $approve_url = wp_nonce_url( admin_url( 'admin.php?page=tan-approvals&action=approve&user_id=' . $user->ID ), 'tan_change_status_' . $user->ID );
-                            $reject_url = wp_nonce_url( admin_url( 'admin.php?page=tan-approvals&action=reject&user_id=' . $user->ID ), 'tan_change_status_' . $user->ID );
+                            // --- START OF THE FIX ---
+                            // The 'page' parameter in the URL must match the slug of the menu page.
+                            $approve_url = wp_nonce_url( admin_url( 'admin.php?page=tan-main-admin-page&action=approve&user_id=' . $user->ID ), 'tan_change_status_' . $user->ID );
+                            $reject_url = wp_nonce_url( admin_url( 'admin.php?page=tan-main-admin-page&action=reject&user_id=' . $user->ID ), 'tan_change_status_' . $user->ID );
+                            // --- END OF THE FIX ---
                             ?>
                             <a href="<?php echo esc_url( $approve_url ); ?>" class="button button-primary">Approve</a>
                             <a href="<?php echo esc_url( $reject_url ); ?>" class="button button-secondary">Reject</a>

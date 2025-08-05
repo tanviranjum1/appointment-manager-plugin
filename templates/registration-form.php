@@ -7,6 +7,19 @@ if ( isset( $_GET['reg_error'] ) ) {
 
 <form action="<?php echo esc_url( $_SERVER['REQUEST_URI'] ); ?>" method="post">
     
+   <p>
+        <label for="tan_context">Select Your Context</label>
+        <select name="tan_context" id="tan_context" required>
+            <option value="">-- Choose a Context --</option>
+            <?php 
+            $contexts = unserialize(TAN_APPOINTMENT_CONTEXTS);
+            foreach ($contexts as $context) {
+                echo '<option value="' . esc_attr($context) . '">' . esc_html($context) . '</option>';
+            }
+            ?>
+        </select>
+    </p>
+
     <p>
         <label for="tan_username">Username</label>
         <input type="text" name="tan_username" id="tan_username" required>

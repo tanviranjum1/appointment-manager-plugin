@@ -16,6 +16,9 @@ if ( ! defined( 'WPINC' ) ) {
     die;
 }
 
+// Define the available contexts for the system.
+define('TAN_APPOINTMENT_CONTEXTS', serialize(['School', 'Hospital', 'Court']));
+
 // Define Plugin Version
 define( 'APPOINTMENT_MANAGER_VERSION', '1.0.0' );
 define( 'APPOINTMENT_MANAGER_PATH', plugin_dir_path( __FILE__ ) );

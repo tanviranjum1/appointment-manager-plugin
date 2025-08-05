@@ -19,6 +19,16 @@ class UserController {
         $email    = sanitize_email( $_POST['tan_email'] );
         $password = $_POST['tan_password'];
         $role     = sanitize_text_field( $_POST['tan_role'] );
+                $context  = sanitize_text_field( $_POST['tan_context'] ); // Get the context
+
+
+   // Validate the selected context against our defined list
+        $allowed_contexts = unserialize(TAN_APPOINTMENT_CONTEXTS);
+        if ( ! in_array($context, $allowed_contexts) ) {
+            $this->redirect_with_error( 'Invalid context selected.' );
+            return;
+        }
+
 
         // Basic validation
         if ( username_exists( $username ) || email_exists( $email ) ) {
@@ -36,10 +46,14 @@ class UserController {
         $user = get_user_by( 'id', $user_id );
         $user->set_role( $role );
 
+        add_user_meta( $user_id, 'tan_context', $context ); // Save the context
+
+
+
         if ( $role === 'tan_approver' ) {
             add_user_meta( $user_id, 'tan_status', 'pending' );
 
-// Add Designation and Institute as user meta
+        // Add Designation and Institute as user meta
         if ( ! empty( $_POST['tan_designation'] ) ) {
             add_user_meta( $user_id, 'tan_designation', sanitize_text_field( $_POST['tan_designation'] ) );
         }
