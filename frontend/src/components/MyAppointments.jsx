@@ -1,69 +1,46 @@
 import { useState, useEffect } from "@wordpress/element";
+import {
+  fetchMyAppointments,
+  updateAppointmentStatus,
+  cancelAppointment,
+} from "../services/api";
+import { formattedTime } from "../utils/formatters";
 
 const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user_role, api_url, nonce } = tan_data;
+  const { user_role } = tan_data;
 
-  const fetchAppointments = () => {
+  const loadAppointments = () => {
     setIsLoading(true);
-    fetch(api_url + "my-appointments", {
-      headers: { "X-WP-Nonce": nonce },
-    })
-      .then((response) => response.json())
+    fetchMyAppointments()
       .then((data) => {
-        // Add a safety check to ensure data is an array
         if (Array.isArray(data)) {
-          console.log("My Appointments Response:", data); // <-- ADD THIS
-
           setAppointments(data);
-        } else {
-          setAppointments([]); // Set to empty array if response is not as expected
         }
-        setIsLoading(false);
-      });
+      })
+      .finally(() => setIsLoading(false));
   };
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+  useEffect(loadAppointments, []);
 
   const handleStatusChange = (id, newStatus) => {
-    fetch(`${api_url}appointments/${id}/status`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-WP-Nonce": nonce,
-      },
-      body: JSON.stringify({ status: newStatus }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.success) {
-          setAppointments((prev) =>
-            prev.map((app) =>
-              app.id == id ? { ...app, status: data.new_status } : app
-            )
-          );
-        }
-      });
+    updateAppointmentStatus(id, newStatus).then((data) => {
+      if (data.success) {
+        setAppointments((prev) =>
+          prev.map((app) =>
+            app.id == id ? { ...app, status: data.new_status } : app
+          )
+        );
+      }
+    });
   };
 
   const handleCancel = (id) => {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) {
       return;
     }
-
-    fetch(`${api_url}appointments/${id}/cancel`, {
-      method: "POST",
-      headers: { "X-WP-Nonce": nonce },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.json().then((err) => Promise.reject(err));
-        }
-        return response.json();
-      })
+    cancelAppointment(id)
       .then((data) => {
         if (data.success) {
           setAppointments((prev) =>
@@ -77,6 +54,14 @@ const MyAppointments = () => {
         alert(`Error: ${error.message || "Could not cancel appointment."}`);
       });
   };
+  const renderStatusBadge = (status) => {
+    let badgeClass = "bg-secondary";
+    if (status === "approved") badgeClass = "bg-success";
+    if (status === "rejected" || status === "cancelled")
+      badgeClass = "bg-danger";
+    if (status === "pending") badgeClass = "bg-warning text-dark";
+    return <span className={`badge ${badgeClass}`}>{status}</span>;
+  };
 
   if (isLoading) {
     return <p>Loading your appointments...</p>;
@@ -86,87 +71,61 @@ const MyAppointments = () => {
   if (user_role === "tan_approver") {
     return (
       <div>
-        <h2>Incoming Appointment Requests</h2>
+        <h3>Incoming Appointment Requests</h3>
         {appointments.length === 0 && <p>You have no appointment requests.</p>}
         {appointments.map((app) => (
-          <div
-            key={app.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "15px",
-              marginBottom: "15px",
-            }}
-          >
-            <p>
-              <strong>Requester:</strong> {app.requester_name}
-            </p>
-            <p>
-              {(() => {
-                const startTime = new Date(app.start_time);
-                const endTime = new Date(app.end_time);
-                const timeOptions = {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                };
-
-                return (
-                  <p>
-                    <strong>Time:</strong> {startTime.toLocaleDateString()}{" "}
-                    &nbsp;
-                    {startTime.toLocaleTimeString([], timeOptions)} -{" "}
-                    {endTime.toLocaleTimeString([], timeOptions)}
-                  </p>
-                );
-              })()}{" "}
-            </p>
-            {app.reason && (
-              <p>
-                <strong>Reason:</strong> {app.reason}
+          <div key={app.id} className="tan-appointment-card">
+            <div className="card-body">
+              <h5 className="card-title">
+                Appointment with: {app.requester_name}
+              </h5>
+              <p className="card-text mb-1">
+                <strong>Time:</strong> {formattedTime(app)}
               </p>
-            )}
-            <p>
-              <strong>Status:</strong>{" "}
-              <span style={{ textTransform: "capitalize", fontWeight: "bold" }}>
-                {app.status}
-              </span>
-            </p>
-            {app.status === "cancelled" && app.cancelled_by_role && (
-              <p>
-                <em>
-                  Cancelled by:{" "}
-                  {app.cancelled_by_role === "tan_requester"
-                    ? "Requester"
-                    : "Approver"}
-                </em>
+              {app.reason && (
+                <p className="card-text">
+                  <strong>Reason:</strong> {app.reason}
+                </p>
+              )}
+              <p className="card-text">
+                <strong>Status:</strong> {renderStatusBadge(app.status)}
               </p>
-            )}
-
-            {app.status === "pending" && (
-              <div>
+              {app.status === "cancelled" && app.cancelled_by_role && (
+                <p className="card-text">
+                  <small className="text-muted">
+                    Cancelled by:{" "}
+                    {app.cancelled_by_role === "tan_requester"
+                      ? "Requester"
+                      : "You"}
+                  </small>
+                </p>
+              )}
+            </div>
+            {(app.status === "pending" || app.status === "approved") && (
+              <div className="card-footer">
+                {app.status === "pending" && (
+                  <>
+                    <button
+                      onClick={() => handleStatusChange(app.id, "approved")}
+                      className="btn btn-success btn-sm me-2"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange(app.id, "rejected")}
+                      className="btn btn-warning btn-sm me-2"
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
                 <button
-                  onClick={() => handleStatusChange(app.id, "approved")}
-                  className="button button-primary"
-                  style={{ marginRight: "10px" }}
+                  onClick={() => handleCancel(app.id)}
+                  className="btn btn-danger btn-sm"
                 >
-                  Approve
-                </button>
-                <button
-                  onClick={() => handleStatusChange(app.id, "rejected")}
-                  className="button button-secondary"
-                  style={{ marginRight: "10px" }}
-                >
-                  Reject
-                </button>
-                <button onClick={() => handleCancel(app.id)} className="button">
                   Cancel
                 </button>
               </div>
-            )}
-            {app.status === "approved" && (
-              <button onClick={() => handleCancel(app.id)} className="button">
-                Cancel Appointment
-              </button>
             )}
           </div>
         ))}
@@ -176,13 +135,10 @@ const MyAppointments = () => {
 
   // --- RENDER FOR REQUESTER ---
   if (user_role === "tan_requester") {
-    // --- START OF THE FIX ---
-    // This variable was missing, causing the crash.
     const now = new Date();
     const twentyFourHoursFromNow = new Date(
       now.getTime() + 24 * 60 * 60 * 1000
     );
-    // --- END OF THE FIX ---
 
     return (
       <div>
@@ -192,64 +148,47 @@ const MyAppointments = () => {
         )}
         {appointments.map((app) => {
           const appointmentDate = new Date(app.start_time);
-          // This check will now work correctly
           const canCancel =
             app.status === "pending" &&
             appointmentDate > twentyFourHoursFromNow;
 
           return (
-            <div
-              key={app.id}
-              style={{
-                border: "1px solid #ccc",
-                padding: "15px",
-                marginBottom: "15px",
-              }}
-            >
-              <p>
-                <strong>Approver:</strong> {app.approver_name}
-              </p>
-
-              {(() => {
-                const startTime = new Date(app.start_time);
-                const endTime = new Date(app.end_time);
-                const timeOptions = {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                };
-
-                return (
-                  <p>
-                    <strong>Time:</strong> {startTime.toLocaleDateString()}{" "}
-                    &nbsp;
-                    {startTime.toLocaleTimeString([], timeOptions)} -{" "}
-                    {endTime.toLocaleTimeString([], timeOptions)}
-                  </p>
-                );
-              })()}
-              <p>
-                <strong>Status:</strong>{" "}
-                <span
-                  style={{ textTransform: "capitalize", fontWeight: "bold" }}
-                >
-                  {app.status}
-                </span>
-              </p>
-              {app.status === "cancelled" && app.cancelled_by_role && (
-                <p>
-                  <em>
-                    Cancelled by:{" "}
-                    {app.cancelled_by_role === "tan_requester"
-                      ? "You"
-                      : "The Approver"}
-                  </em>
+            <div key={app.id} className="tan-appointment-card">
+              <div className="card-body">
+                <h5 className="card-title">
+                  Appointment with: {app.approver_name}
+                </h5>
+                <p className="card-text mb-1">
+                  <strong>Time:</strong> {formattedTime(app)}
                 </p>
-              )}
+                {app.reason && (
+                  <p className="card-text">
+                    <strong>Reason:</strong> {app.reason}
+                  </p>
+                )}
+                <p className="card-text">
+                  <strong>Status:</strong> {renderStatusBadge(app.status)}
+                </p>
+                {app.status === "cancelled" && app.cancelled_by_role && (
+                  <p className="card-text">
+                    <small className="text-muted">
+                      Cancelled by:{" "}
+                      {app.cancelled_by_role === "tan_requester"
+                        ? "You"
+                        : "The Approver"}
+                    </small>
+                  </p>
+                )}
+              </div>
               {canCancel && (
-                <button onClick={() => handleCancel(app.id)} className="button">
-                  Cancel Request
-                </button>
+                <div className="card-footer">
+                  <button
+                    onClick={() => handleCancel(app.id)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Cancel Request
+                  </button>
+                </div>
               )}
             </div>
           );
