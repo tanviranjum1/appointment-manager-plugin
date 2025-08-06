@@ -4,7 +4,7 @@
  * Plugin URI:        https://example.com/
  * Description:       A reusable WordPress plugin that supports multiple appointment contexts.
  * Version:           1.0.0
- * Author:            Your Name
+ * Author:            Tanvir Anjum
  * Author URI:        https://example.com/
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html

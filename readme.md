@@ -1,112 +1,100 @@
 # Appointment Management System - WordPress Plugin
 
-A flexible, reusable WordPress plugin that provides a complete system for managing appointments within different contexts (e.g., School, Hospital, Court). It allows certain users ("Approvers") to set their availability, and other users ("Requesters") from the same context to book appointments. The system includes an admin approval workflow and a detailed appointment cancellation workflow.
+A flexible, reusable WordPress plugin that provides a complete system for managing appointments within different contexts (e.g., School, Hospital, Court). It allows designated "Approvers" (like doctors or teachers) to set their availability, and "Requesters" (like patients or students) from the same context to book appointments.
 
-## For Users: How to Use the Plugin
+The system features a modern, decoupled architecture with a PHP OOP backend providing a REST API, and a React.js frontend for a dynamic user experience.
 
-To use the Appointment Management System on your WordPress site, create the following pages and add their corresponding shortcodes to the page content.
+## Key Features
 
-### 1. Registration Page
-
-- **Purpose:** Allows new users to sign up as either a "Requester" or an "Approver" within a specific context.
-- **Shortcode:** `[tan_registration]`
-- **How it works:**
-  - All new users must select a context (e.g., "Hospital").
-  - New Requesters are automatically approved.
-  - New Approvers must provide their Designation and Institute, and are then placed in a pending queue for an administrator to approve.
-
-### 2. Approver Portal (For Approvers Only)
-
-- **Purpose:** The main dashboard for Approvers to set their available time slots for appointments.
-- **Shortcode:** `[tan_approver_portal]`
-- **How it works:** Only logged-in, approved users with the "Approver" role can see this page.
-
-### 3. Book an Appointment (For Requesters Only)
-
-- **Purpose:** The main interface for Requesters to book an appointment.
-- **Shortcode:** `[tan_booking]`
-- **How it works:** A logged-in Requester can select from a list of Approvers who are in the **same context**. They can then see the available slots and request an appointment after providing a mandatory reason.
-
-### 4. My Appointments (For Both Roles)
-
-- **Purpose:** A unified dashboard to view and manage appointments.
-- **Shortcode:** `[tan_my_appointments]`
-- **How it works:**
-  - **If you are an Approver:** This page lists your incoming appointments. You can "Approve," "Reject," or "Cancel" pending requests. You can also cancel already approved appointments.
-  - **If you are a Requester:** This page lists your sent requests and their status. You can cancel a **pending** appointment, but only if it is more than 24 hours away.
-  - If an appointment is cancelled, the page will show who performed the cancellation.
-
-### 5. Admin Management Area
-
-- **Purpose:** For Site Administrators to manage the system.
-- **Location:** WordPress Admin -> Appointment Admin
-- **How it works:** This menu contains three pages:
-  - **Pending Approvals:** A queue to approve or reject new Approver registrations.
-  - **All Appointments:** A master log of every appointment in the system.
-  - **Setup Guide:** A helpful guide for admins on how to create the necessary pages with shortcodes.
-
-## For Developers: Getting Started & Contributing
-
-This section provides instructions for setting up a development environment and guidelines for adding new features.
-
-### Prerequisites
-
-- A local WordPress installation.
-- [Node.js and npm](https://nodejs.org/en/) installed on your computer.
-- [Git](https://git-scm.com/downloads) installed on your computer.
-
-### Setup Instructions
-
-1.  Clone this repository into your WordPress `wp-content/plugins/` directory.
-2.  Navigate to the plugin's `frontend/` directory in your terminal: `cd wp-content/plugins/appointment-manager/frontend/`.
-3.  Install JavaScript packages: `npm install`.
-4.  For active development, run: `npm run start`.
-5.  To create a production build, run: `npm run build`.
-6.  Activate the plugin in WordPress.
-7.  **Crucially:** Go to **Settings -> Permalinks** and click "Save Changes" to register the API routes. Deactivate and reactivate the plugin if database changes are needed.
+- **Context-Based System**: Isolate Approvers and Requesters into distinct groups (e.g., a patient can only see doctors, not teachers).
+- **Role-Based Permissions**: Two custom roles (Approver and Requester) with specific capabilities.
+- **Admin Dashboards**: A full suite of admin panels to approve new users, manage settings, and view all appointments across the system.
+- **Dynamic Frontend**: A responsive and user-friendly interface built with React and Bootstrap.
+- **Appointment Lifecycle Management**: A complete workflow including booking, approval, rejection, and cancellation with specific business rules.
 
 ---
 
-## File & Directory Structure
+## Demonstration & Usage Guide
 
-Here is a breakdown of the purpose of each file and directory in the plugin.
+This guide demonstrates the complete workflow of the plugin, from initial setup by an administrator to the day-to-day usage by Approvers and Requesters.
 
-```
-appointment-manager/
-├── appointment-manager.php         // Main plugin bootstrap file; initializes all components and defines contexts.
-│
-├── app/                          // Contains all core Object-Oriented PHP application logic.
-│   ├── Controllers/              // Handles REST API requests and business logic.
-│   ├── Migrations/               // Scripts for creating and altering database tables.
-│   ├── Models/                   // Classes that handle direct database interactions (CRUD).
-│   │   ├── Appointment.php
-│   │   └── Availability.php
-│   └── Services/                 // Contains specialized, reusable services.
-│       ├── EmailService.php
-│       └── RoleService.php
-│
-├── includes/                     // WordPress-specific integration classes.
-│   ├── class-activator.php       // Runs the activation sequence.
-│   └── class-shortcodes.php      // Defines all shortcodes and enqueues assets.
-│
-├── templates/                    // Simple PHP files for rendering server-side HTML views.
-│   ├── admin-all-appointments.php
-│   ├── admin-approvals.php
-│   ├── admin-setup-guide.php
-│   └── registration-form.php
-│
-└── frontend/                     // Contains the entire React frontend application.
-    ├── build/                    // (Ignored by Git) Compiled JavaScript/CSS output.
-    ├── node_modules/             // (Ignored by Git) Node.js package dependencies.
-    └── src/
-        ├── components/           // React components focused on rendering UI and managing state.
-        │   ├── AvailabilityForm.jsx
-        │   ├── BookingForm.jsx
-        │   └── MyAppointments.jsx
-        ├── services/             // Handles all communication with the backend REST API.
-        │   └── api.js
-        ├── utils/                // Contains reusable helper functions (e.g., for formatting).
-        │   └── formatters.js
-        ├── index.css             // Custom CSS styles for the components.
-        └── index.js              // Main entry point for the React application.
-```
+### Admin Setup and Management
+
+1. **Plugin Activation**  
+   First, the administrator installs the plugin and activates it from the main WordPress "Plugins" page.  
+   ![Plugin Activation](assets/screenshots/screenshot-1.png)
+
+2. **Configure Settings**  
+   The administrator navigates to Appointment Admin -> Settings to define the different "contexts" for the system (e.g., Hospital, School). This is a crucial step that determines how the plugin will be used.  
+   ![Configure Settings](assets/screenshots/screenshot-2.png)
+
+3. **Create Frontend Pages**  
+   The administrator creates the four necessary pages for the plugin's frontend interface and places the corresponding shortcode inside each one (e.g., `[tan_registration]` for the Register page).  
+   ![Create Frontend Pages](assets/screenshots/screenshot-3.png)
+
+### User Registration and Management
+
+4. **New User Registration**  
+   A new user visits the public registration page to sign up. Here, they can register as an "Approver" (like a professor), providing their designation and institute, or as a "Requester" (like a student), selecting the appropriate context.  
+   ![New User Registration](assets/screenshots/screenshot-4.png)
+   ![New User Registration](assets/screenshots/screenshot-04.png)
+
+5. **Admin Approval Queue**  
+   After an Approver registers, they appear in the Appointment Admin -> Pending Approvers queue. The administrator can see their details and has the option to "Approve" or "Reject" their application. Once approved, they will be able to add their availability.  
+   ![Admin Approval Queue](assets/screenshots/screenshot-5.png)
+
+### The Approver’s Workflow
+
+6. **Setting Availability**  
+   After being approved, an Approver can go to the "Approver Portal." Here they can select a date and add the specific time slots when they are available for appointments.  
+   ![Setting Availability](assets/screenshots/screenshot-6.png)
+
+### The Requester’s Workflow
+
+7. **Booking an Appointment**  
+   A Requester navigates to the "Book an Appointment" page. They can see a list of Approvers from their same context, view their available time slots, and click "Book Now" after providing a reason.  
+   ![Booking an Appointment](assets/screenshots/screenshot-7.png)
+
+8. **Successful Booking Confirmation**  
+   After clicking "Book Now," the user receives an instant confirmation message, and the booked slot is immediately removed from the list to prevent double-booking.  
+   ![Booking Confirmation](assets/screenshots/screenshot-8.png)
+
+### Appointment Management
+
+9. **Requester’s "My Appointments" Page**  
+   The Requester can visit their "My Appointments" page at any time to track the status of all their sent requests (Pending, Approved, Rejected, etc.).  
+   ![Requester Appointments](assets/screenshots/screenshot-9.png)
+
+10. **Approver’s "My Appointments" Page**  
+    The Approver uses the same "My Appointments" page but has different actions available. They can manage their incoming requests by approving or rejecting them.  
+    ![Approver Appointments](assets/screenshots/screenshot-10.png)
+
+### Data and System Overview
+
+11. **Admin Appointment Log**  
+    The administrator can get a powerful overview by navigating to Appointment Admin -> All Appointments. Here they can see a filterable master log of every appointment in the system.  
+    ![Admin Appointment Log](assets/screenshots/screenshot-11.png)
+
+12. **Database Structure**  
+    The plugin creates two custom tables (`wp_am_appointments` and `wp_am_availability`) to store its data. It also adds new roles (`approver`, `requester`) and saves custom user data (institute, designation, context) to the `wp_usermeta` table.  
+    ![Database Structure](assets/screenshots/screenshot-12.png)
+
+---
+
+## For Developers: Getting Started
+
+This section provides instructions for setting up a local development environment.
+
+### Prerequisites
+
+- A local WordPress installation
+- Node.js and npm
+- Git
+
+### Setup Instructions
+
+1. Clone this repository into your WordPress `wp-content/plugins/` directory.
+2. Navigate to the plugin's `frontend/` directory in your terminal:
+   ```bash
+   cd path/to/wp-content/plugins/appointment-manager/frontend/
+   ```

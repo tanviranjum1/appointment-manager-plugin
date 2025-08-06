@@ -63,7 +63,7 @@ class AdminApprovalController {
         add_submenu_page(
             'tan-main-admin-page',   // Parent Slug
             'Pending Approvals',     // Page Title
-            'Pending Approvals',     // Menu Title
+            'Pending Approvers',     // Menu Title
             'manage_options',        // Capability
             'tan-main-admin-page',   // Menu Slug (same as parent to make it the default)
             [ $this, 'render_pending_approvals_page' ]  // Function

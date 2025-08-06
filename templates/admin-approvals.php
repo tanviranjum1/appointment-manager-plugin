@@ -1,5 +1,5 @@
 <div class="wrap">
-    <h1 class="wp-heading-inline">Pending Approver Registrations</h1>
+    <h1 class="wp-heading-inline">Pending Approver Role Assign</h1>
     <hr class="wp-header-end">
     
     <table class="table table-striped table-hover">
