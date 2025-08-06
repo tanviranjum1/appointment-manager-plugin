@@ -78,14 +78,14 @@ class AdminApprovalController {
             [ $this, 'render_all_appointments_page' ] // NEW Function
         );
 
-        // add_submenu_page(
-        //     'tan-main-admin-page',   // Parent Slug
-        //     'Setup Guide',           // Page Title
-        //     'Setup Guide',           // Menu Title
-        //     'manage_options',        // Capability
-        //     'tan-setup-guide',       // Menu Slug
-        //     [ $this, 'render_setup_guide_page' ] // NEW Function
-        // );
+        add_submenu_page(
+            'tan-main-admin-page',   // Parent Slug
+            'Setup Guide',           // Page Title
+            'Setup Guide',           // Menu Title
+            'manage_options',        // Capability
+            'tan-setup-guide',       // Menu Slug
+            [ $this, 'render_setup_guide_page' ] // NEW Function
+        );
 
         add_submenu_page(
             'tan-main-admin-page',

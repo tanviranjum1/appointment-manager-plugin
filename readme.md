@@ -10,17 +10,42 @@ The system features a modern, decoupled architecture with a PHP OOP backend prov
 - **Role-Based Permissions**: Two custom roles (Approver and Requester) with specific capabilities.
 - **Admin Dashboards**: A full suite of admin panels to approve new users, manage settings, and view all appointments across the system.
 - **Dynamic Frontend**: A responsive and user-friendly interface built with React and Bootstrap.
-- **Appointment Lifecycle Management**: A complete workflow including booking, approval, rejection, and cancellation with specific business rules.
+- **Appointment Lifecycle Management**: A complete workflow including booking, approval, rejection, and cancellation
 
 ---
+
+## Usage & Shortcodes
+
+To make the plugin functional, an administrator needs to create pages and place the following shortcodes in the page content. A setup guide is also available in the admin dashboard at Appointment Admin -> Setup Guide.
+
+Registration Page: [tan_registration]
+Approver Availability Page: [tan_approver_portal]
+Booking Page: [tan_booking]
+"My Appointments" Dashboard: [tan_my_appointments]
+
+## Installation
+
+You can install this plugin in two ways:
+ZIP Upload (Recommended):
+Create a .zip file of the appointment-manager directory. Before zipping, ensure you remove any files and folders listed in the .distignore file (like .git, .vscode, node_modules, etc.).
+In your WordPress admin dashboard, navigate to Plugins -> Add New -> Upload Plugin.
+Choose the .zip file you created and click "Install Now".
+
+Manual Upload:
+Upload the entire appointment-manager folder to the wp-content/plugins/ directory of your WordPress installation.
+After installation, navigate to the Plugins page and activate the "Appointment Management System".
+
+Crucially: Go to Settings -> Permalinks and click "Save Changes" to ensure all API routes are correctly registered.
+
 ## Database Structure
+
 The plugin maintains a clean database structure with two custom tables:
 
-| Table               | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| `wp_am_appointments` | Stores appointment metadata, statuses, `cancelled_by` & `reason` columns    |
-| `wp_am_availability` | Manages time slots per Approver                                             |
-| `wp_usermeta`        | Stores context, institute & designation as user meta                        |
+| Table                | Description                                                              |
+| -------------------- | ------------------------------------------------------------------------ |
+| `wp_am_appointments` | Stores appointment metadata, statuses, `cancelled_by` & `reason` columns |
+| `wp_am_availability` | Manages time slots per Approver                                          |
+| `wp_usermeta`        | Stores context, institute & designation as user meta                     |
 
 **Migrations**: Table creation and updates are handled by migration scripts in `app/Migrations/`, which run automatically on plugin activation.
 
@@ -41,7 +66,6 @@ This guide demonstrates the complete workflow of the plugin, from initial setup 
 3. **Create Frontend Pages**  
    The administrator creates the four necessary pages for the plugin's frontend interface and places the corresponding shortcode inside each one (e.g., `[tan_registration]` for the Register page).  
    ![Create Frontend Pages](assets/screenshots/screenshot-3.png?raw=true)
-   
 
 ### User Registration and Management
 
@@ -101,6 +125,7 @@ This section provides instructions for setting up a local development environmen
 - A local WordPress installation
 - Node.js and npm
 - Git
+- Xampp for apache and mysql server
 
 ### Setup Instructions
 
@@ -109,8 +134,8 @@ This section provides instructions for setting up a local development environmen
    ```bash
    cd path/to/wp-content/plugins/appointment-manager/frontend/
    ```
-3. npm install       # Install dependencies
-   npm run build     # Create optimized build
-In WordPress admin:
+3. npm install # Install dependencies
+   npm run build # Create optimized build
+   In WordPress admin:
    Activate the plugin
    Crucially: Go to Settings → Permalinks and click "Save Changes" to flush rewrite rules and activate REST API endpoints
