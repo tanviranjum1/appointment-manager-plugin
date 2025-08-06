@@ -36,6 +36,14 @@ class Activator {
         \App\Migrations\AddCancelledByToAppointmentsTable::up(); // Add this line
 
 
+           // Set default contexts on the very first activation.
+        // add_option() does nothing if the option already exists, so this is safe to run
+        // on subsequent reactivations without overwriting user settings.
+        $default_contexts = ['Hospital', 'School', 'Court'];
+        add_option( 'tan_appointment_contexts', $default_contexts );
+
+
+
         // Clear the permalinks
         flush_rewrite_rules();
     }

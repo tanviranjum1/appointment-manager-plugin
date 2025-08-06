@@ -45,7 +45,8 @@ The plugin maintains a clean database structure with two custom tables:
 | -------------------- | ------------------------------------------------------------------------ |
 | `wp_am_appointments` | Stores appointment metadata, statuses, `cancelled_by` & `reason` columns |
 | `wp_am_availability` | Manages time slots per Approver                                          |
-| `wp_usermeta`        | Stores context, institute & designation as user meta                     |
+| `wp_usermeta`        | Stores user context, institute & designation as user meta                |
+| `wp_options`         | Stores a custom option tan_appointment_contexts list                     |
 
 **Migrations**: Table creation and updates are handled by migration scripts in `app/Migrations/`, which run automatically on plugin activation.
 

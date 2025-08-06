@@ -227,11 +227,12 @@ class AdminApprovalController {
         if ( ! is_string( $input ) ) {
             return [];
         }
-        // Split the string by new lines
-        $contexts = explode( "\n", $input );
-        // Trim whitespace from each item and remove any empty lines
-        $clean_contexts = array_filter( array_map( 'trim', $contexts ) );
-        return $clean_contexts;
+      // Use a regular expression to split by any kind of newline (\n, \r, or \r\n)
+        // and automatically filter out any resulting empty lines.
+        $contexts = preg_split( '/\R/', $input, -1, PREG_SPLIT_NO_EMPTY );
+        
+        // Trim whitespace from each item to ensure clean data
+        return array_map( 'trim', $contexts );
     }
 
     private function handle_actions() {
