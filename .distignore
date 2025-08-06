@@ -1,0 +1,11 @@
+# Ignore dev artefacts when `git archive` or WP.org deploy script runs
+/frontend/node_modules
+/frontend/src
+/frontend/package.json
+/frontend/package-lock.json
+seedingfordemo.sql
+.gitignore
+.eslintrc.*
+.vscode
+*.map
+tests
