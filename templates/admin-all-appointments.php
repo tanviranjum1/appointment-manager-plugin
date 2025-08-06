@@ -1,13 +1,12 @@
 <div class="wrap">
-    <h1>All Appointments</h1>
+    <h1 class="wp-heading-inline">All Appointments</h1>
     <p>This page shows a complete log of all appointments in the system.</p>
-
-
+    <hr class="wp-header-end">
 
     <form method="get">
         <input type="hidden" name="page" value="tan-all-appointments" />
-        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <select name="filter_status">
+        <div class="d-flex align-items-center gap-2 mb-3 p-3 bg-light border rounded">
+            <select name="filter_status" class="form-select w-auto">
                 <option value="">All Statuses</option>
                 <?php foreach ($all_statuses as $status) : ?>
                     <option value="<?php echo esc_attr($status); ?>" <?php selected(isset($_GET['filter_status']) ? $_GET['filter_status'] : '', $status); ?>>
@@ -16,7 +15,7 @@
                 <?php endforeach; ?>
             </select>
             
-            <select name="filter_approver">
+            <select name="filter_approver" class="form-select w-auto">
                 <option value="">All Approvers</option>
                 <?php foreach ($all_approvers as $approver) : ?>
                     <option value="<?php echo esc_attr($approver->ID); ?>" <?php selected(isset($_GET['filter_approver']) ? $_GET['filter_approver'] : 0, $approver->ID); ?>>
@@ -25,12 +24,13 @@
                 <?php endforeach; ?>
             </select>
             
-            <input type="submit" class="button" value="Filter">
+            <input type="submit" class="btn btn-secondary" value="Filter">
         </div>
     </form>
-    <table class="wp-list-table widefat fixed striped">
+
+    <table class="table table-striped table-hover">
         <thead>
-            <tr>
+            <tr class="table-light">
                 <th scope="col">Requester</th>
                 <th scope="col">Approver</th>
                 <th scope="col">Appointment Time</th>
@@ -46,8 +46,10 @@
                         <td><?php echo esc_html( $app->approver_name ); ?></td>
                         <td><?php echo esc_html( (new DateTime($app->start_time))->format('F j, Y, g:i a') ); ?></td>
                         <td><?php echo esc_html( $app->reason ); ?></td>
-                        <td style="text-transform: capitalize; font-weight: bold;">
-                            <?php echo esc_html( $app->status ); ?>
+                        <td>
+                            <span class="badge bg-<?php echo esc_attr($app->status === 'approved' ? 'success' : ($app->status === 'pending' ? 'warning text-dark' : 'danger')); ?>">
+                                <?php echo esc_html( $app->status ); ?>
+                            </span>
                             <?php if ($app->status === 'cancelled' && !empty($app->cancelled_by_role)) : ?>
                                 <br>
                                 <small>(by <?php echo esc_html(str_replace('tan_', '', $app->cancelled_by_role)); ?>)</small>
@@ -57,7 +59,9 @@
                 <?php endforeach; ?>
             <?php else : ?>
                 <tr>
-                    <td colspan="5">No appointments found.</td>
+                    <td colspan="5">
+                        <div class="alert alert-info mb-0">No appointments found.</div>
+                    </td>
                 </tr>
             <?php endif; ?>
         </tbody>

@@ -4,27 +4,19 @@ namespace App\Controllers;
 use App\Models\Availability;
 
 
+/**
+ * Handles REST API requests for managing an Approver's availability.
+ * @package Appointment_Manager
+ */
 class AvailabilityController {
-
-    public function __construct() {
-        add_action( 'rest_api_init', [ $this, 'register_routes' ] );
-    }
-
-    public function register_routes() {
-        register_rest_route( 'appointment-manager/v1', '/availability', [
-            [
-                'methods'             => \WP_REST_Server::READABLE,
-                'callback'            => [ $this, 'get_items' ],
-                'permission_callback' => [ $this, 'permissions_check' ],
-            ],
-            [
-                'methods'             => \WP_REST_Server::CREATABLE,
-                'callback'            => [ $this, 'create_item' ],
-                'permission_callback' => [ $this, 'permissions_check' ],
-            ],
-        ] );
-    }
-
+    
+    /**
+     * Permission check for all availability routes.
+     * Ensures the user is a logged-in and active approver.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return bool True if the user has permission, false otherwise.
+     */
     public function permissions_check( $request ) {
         $user = wp_get_current_user();
         if ( ! $user->ID ) {
@@ -34,12 +26,25 @@ class AvailabilityController {
         return in_array( 'tan_approver', (array) $user->roles ) && $status === 'active';
     }
 
+
+    /**
+     * API callback to get all availability slots for the current approver.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response The JSON response with availability data.
+     */
     public function get_items( $request ) {
         $user_id = get_current_user_id();
         $results = Availability::get_by_approver_id( $user_id );
         return new \WP_REST_Response( $results, 200 );
     }
 
+    /**
+     * API callback to create a new availability slot.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response|\WP_Error The JSON response on success or error object on failure.
+     */
       public function create_item( $request ) {
         $user_id = get_current_user_id();
         $params = $request->get_json_params();

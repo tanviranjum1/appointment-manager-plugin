@@ -24,10 +24,10 @@ define( 'APPOINTMENT_MANAGER_VERSION', '1.0.0' );
 define( 'APPOINTMENT_MANAGER_PATH', plugin_dir_path( __FILE__ ) );
 define( 'APPOINTMENT_MANAGER_URL', plugin_dir_url( __FILE__ ) );
 
-// --- START OF THE FIX ---
 // Include all dependencies, including the new Models.
 require_once APPOINTMENT_MANAGER_PATH . 'includes/class-activator.php';
-require_once APPOINTMENT_MANAGER_PATH . 'app/Services/EmailService.php';
+require_once APPOINTMENT_MANAGER_PATH . 'includes/class-deactivator.php';
+// require_once APPOINTMENT_MANAGER_PATH . 'app/Services/EmailService.php';
 require_once APPOINTMENT_MANAGER_PATH . 'app/Services/RoleService.php';
 
 // **These lines are essential for the Models to be found**
@@ -39,8 +39,13 @@ require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/AdminApprovalController
 require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/AvailabilityController.php';
 require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/BookingController.php';
 require_once APPOINTMENT_MANAGER_PATH . 'app/Controllers/AppointmentController.php';
+
+
 require_once APPOINTMENT_MANAGER_PATH . 'includes/class-shortcodes.php';
-// --- END OF THE FIX ---
+
+
+// Load the new routes file
+require_once APPOINTMENT_MANAGER_PATH . 'app/Routes/Api.php';
 
 /**
  * The code that runs during plugin activation.
@@ -48,7 +53,19 @@ require_once APPOINTMENT_MANAGER_PATH . 'includes/class-shortcodes.php';
 function activate_appointment_manager() {
     \Includes\Activator::activate();
 }
+
+/**
+ * The code that runs during plugin deactivation.
+ */
+function deactivate_appointment_manager() {
+    \Includes\Deactivator::deactivate();
+}
+
+
+
+
 register_activation_hook( __FILE__, 'activate_appointment_manager' );
+register_deactivation_hook( __FILE__, 'deactivate_appointment_manager' );
 
 /**
  * Main plugin class
@@ -62,12 +79,18 @@ final class Appointment_Manager {
      * Initialize the plugin components.
      */
     public function init() {
-        // Initialize controllers and shortcodes
+
+ // We must initialize the UserController here so its 'init' hook for the
+        // PHP registration form is correctly registered.
         new \App\Controllers\UserController();
+
+        // This controller is not part of the API, so it needs its own initialization.
         new \App\Controllers\AdminApprovalController();
-        new \App\Controllers\AvailabilityController();
-        new \App\Controllers\BookingController();
-        new \App\Controllers\AppointmentController();
+        
+        // This class initializes all API routes.
+        new \App\Routes\Api();
+        
+        // This class initializes all shortcodes.
         new \Includes\Shortcodes();
     }
 }

@@ -10,9 +10,20 @@ require_once plugin_dir_path( __FILE__ ) . '../app/Migrations/AddReasonToAppoint
 require_once plugin_dir_path( __FILE__ ) . '../app/Migrations/AddCancelledByToAppointmentsTable.php'; // Add this line
 
 
-
+/**
+ * Fired during plugin activation.
+ * This class defines all code necessary to run during the plugin's activation.
+ * @package Appointment_Manager
+ */
 class Activator {
 
+
+     /**
+     * Runs the activation sequence.
+     * Creates custom roles, database tables, and runs migrations.
+     *
+     * @return void
+     */
     public static function activate() {
         // Register custom roles [cite: 80]
         \App\Services\RoleService::registerRoles();

@@ -1,13 +1,12 @@
 import { render } from "@wordpress/element";
-import "./index.css"; // Add this line to import your new CSS file
+// import "./index.css"; // Add this line to import your new CSS file
 import AvailabilityForm from "./components/AvailabilityForm";
-import BookingForm from "./components/BookingForm"; // Import the new component
-import MyAppointments from "./components/MyAppointments"; // Import the new component
-
+import BookingForm from "./components/BookingForm";
+import MyAppointments from "./components/MyAppointments";
 document.addEventListener("DOMContentLoaded", () => {
   const approverRoot = document.getElementById("approver-portal-app");
   const requesterRoot = document.getElementById("booking-page-app");
-  const myAppointmentsRoot = document.getElementById("my-appointments-app"); // Add this line
+  const myAppointmentsRoot = document.getElementById("my-appointments-app");
 
   if (approverRoot) {
     render(<AvailabilityForm />, approverRoot);

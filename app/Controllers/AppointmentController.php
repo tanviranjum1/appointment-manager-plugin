@@ -4,51 +4,32 @@ namespace App\Controllers;
 
 use App\Models\Appointment;
 
+
+/**
+ * Handles REST API requests for managing appointments (viewing, updating status, cancelling).
+ */
 class AppointmentController {
-    public function __construct() {
-        add_action( 'rest_api_init', [ $this, 'register_routes' ] );
-    }
-
-    public function register_routes() {
-        // GET /my-appointments (unchanged)
-        register_rest_route( 'appointment-manager/v1', '/my-appointments', [
-            'methods'             => \WP_REST_Server::READABLE,
-            'callback'            => [ $this, 'get_items' ],
-            'permission_callback' => [ $this, 'permissions_check' ],
-        ] );
-
-        // POST /appointments/{id}/status (This was previously EDITABLE)
-        register_rest_route( 'appointment-manager/v1', '/appointments/(?P<id>\d+)/status', [
-            'methods'             => 'POST',
-            'callback'            => [ $this, 'update_item_status' ],
-            'permission_callback' => [ $this, 'update_permissions_check' ],
-            'args' => [
-                'status' => [
-                    'required' => true,
-                    'validate_callback' => function($param) {
-                        return in_array($param, ['approved', 'rejected']);
-                    }
-                ],
-            ],
-        ] );
-
-        // POST /appointments/{id}/cancel (unchanged)
-        register_rest_route( 'appointment-manager/v1', '/appointments/(?P<id>\d+)/cancel', [
-            'methods'             => 'POST',
-            'callback'            => [ $this, 'cancel_item' ],
-            'permission_callback' => [ $this, 'cancel_permissions_check' ],
-        ] );
-    }
-
+    
+    /**
+     * Permission check to ensure user is logged in.
+     *
+     * @return bool
+     */
     public function permissions_check() {
         return is_user_logged_in();
     }
 
+
+    /**
+     * API callback to get appointments for the current user.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response The JSON response with appointments data.
+     */
     public function get_items( $request ) {
         $user = wp_get_current_user();
         $results = ['appointments' => [], 'total_pages' => 1];
         
-        // --- START OF THE FIX ---
         // Get filter and pagination params from the request and ensure they are clean.
         $status_filter = sanitize_text_field($request->get_param('status'));
         $filters = [];
@@ -56,7 +37,6 @@ class AppointmentController {
             $filters['status'] = $status_filter;
         }
         $page = $request->get_param('page') ? intval($request->get_param('page')) : 1;
-        // --- END OF THE FIX ---
 
         if ( in_array('tan_approver', (array) $user->roles) ) {
             $results = Appointment::get_by_approver_id( $user->ID, $filters, $page );
@@ -66,6 +46,14 @@ class AppointmentController {
         return new \WP_REST_Response( $results, 200 );
     }
 
+
+     /**
+     * Permission check for updating an appointment's status.
+     * Ensures the user is the assigned approver for the appointment.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return bool
+     */
     public function update_permissions_check( $request ) {
         $user = wp_get_current_user();
         $appointment = Appointment::find( (int) $request['id'] );
@@ -77,8 +65,14 @@ class AppointmentController {
         return (int) $appointment->approver_id === $user->ID;
     }
     
-    // --- START OF THE FIX ---
-    // This entire function has been corrected.
+  
+
+    /**
+     * API callback to update an appointment's status (approve/reject).
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response|\WP_Error The JSON response on success or error object on failure.
+     */
     public function update_item_status( $request ) {
         $appointment_id = (int) $request['id'];
         $params = $request->get_json_params();
@@ -88,27 +82,35 @@ class AppointmentController {
         $updated = Appointment::update_status( $appointment_id, $new_status );
 
         // Send email notification after successful update
-        if ($updated) {
-            // Re-fetch the appointment details to get requester/approver IDs
-            $appointment = Appointment::find($appointment_id);
-            if ($appointment) {
-                $requester = get_user_by('id', $appointment->requester_id);
-                $approver = get_user_by('id', $appointment->approver_id);
-                if ($requester && $approver) {
-                    $email_data = [
-                        'start_time' => $appointment->start_time,
-                        'status' => $new_status,
-                        'approver_name' => $approver->display_name
-                    ];
-                    \App\Services\EmailService::notifyRequesterOfStatusUpdate($requester->user_email, $email_data);
-                }
-            }
-        }
+        // if ($updated) {
+        //     // Re-fetch the appointment details to get requester/approver IDs
+        //     $appointment = Appointment::find($appointment_id);
+        //     if ($appointment) {
+        //         $requester = get_user_by('id', $appointment->requester_id);
+        //         $approver = get_user_by('id', $appointment->approver_id);
+        //         if ($requester && $approver) {
+        //             $email_data = [
+        //                 'start_time' => $appointment->start_time,
+        //                 'status' => $new_status,
+        //                 'approver_name' => $approver->display_name
+        //             ];
+        //             \App\Services\EmailService::notifyRequesterOfStatusUpdate($requester->user_email, $email_data);
+        //         }
+        //     }
+        // }
 
         return new \WP_REST_Response( ['success' => true, 'new_status' => $new_status], 200 );
     }
-    // --- END OF THE FIX ---
 
+
+
+    /**
+     * Permission check for cancelling an appointment.
+     * Ensures the user is either the requester or the approver for the appointment.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return bool
+     */
     public function cancel_permissions_check( $request ) {
         if ( ! is_user_logged_in() ) {
             return false;
@@ -124,6 +126,13 @@ class AppointmentController {
         return ( (int) $appointment->requester_id === $user_id || (int) $appointment->approver_id === $user_id );
     }
 
+
+     /**
+     * API callback to cancel an appointment.
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response|\WP_Error The JSON response on success or error object on failure.
+     */
     public function cancel_item( $request ) {
         $appointment_id = (int) $request['id'];
         $appointment = Appointment::find($appointment_id);
@@ -151,11 +160,11 @@ class AppointmentController {
         Appointment::cancel( $appointment_id, $user->roles[0] );
 
         // Send email notification
-        $requester = get_user_by('id', $appointment->requester_id);
-        $approver = get_user_by('id', $appointment->approver_id);
-        if ($requester && $approver) {
-            \App\Services\EmailService::notifyOfCancellation($requester, $approver, $appointment, $user->roles[0]);
-        }
+        // $requester = get_user_by('id', $appointment->requester_id);
+        // $approver = get_user_by('id', $appointment->approver_id);
+        // if ($requester && $approver) {
+        //     \App\Services\EmailService::notifyOfCancellation($requester, $approver, $appointment, $user->roles[0]);
+        // }
 
         return new \WP_REST_Response( ['success' => true, 'new_status' => 'cancelled'], 200 );
     }

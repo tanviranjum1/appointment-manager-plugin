@@ -4,13 +4,51 @@ namespace App\Controllers;
 use App\Models\Appointment; // Use the model
 
 
+/**
+ * Manages all admin-facing pages and functionality for the plugin.
+ */
 class AdminApprovalController {
+
+    /**
+     * Constructor. Hooks into WordPress admin actions.
+     */
     public function __construct() {
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_init', [ $this, 'register_admin_settings' ] );
-
+        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
     }
 
+
+    /**
+     * Enqueues CSS and JS for the custom admin pages.
+     *
+     * @param string $hook The current admin page hook.
+     * @return void
+     */
+    public function enqueue_admin_assets( $hook ) {
+        // A list of our plugin's admin page hooks
+        $plugin_pages = [
+            'toplevel_page_tan-main-admin-page',
+            'appointment-admin_page_tan-all-appointments',
+            'appointment-admin_page_tan-settings',
+        ];
+
+        // Only load our assets on our plugin's pages
+        if ( in_array( $hook, $plugin_pages ) ) {
+            wp_enqueue_style(
+                'bootstrap-css',
+                APPOINTMENT_MANAGER_URL . 'assets/css/bootstrap.min.css',
+                [],
+                '5.3.3'
+            );
+        }
+    }
+
+    /**
+     * Adds the main menu and submenu pages to the WordPress admin dashboard.
+     *
+     * @return void
+     */
     public function add_admin_menu() {
         add_menu_page(
             'Appointment System',    // Page Title
@@ -59,10 +97,22 @@ class AdminApprovalController {
         );
       
     }
+
+  /**
+     * Renders the main settings page view.
+     *
+     * @return void
+     */
  public function render_settings_page() {
         include_once APPOINTMENT_MANAGER_PATH . 'templates/admin-settings-page.php';
     }
 
+
+     /**
+     * Prints the informational text for the contexts settings section.
+     *
+     * @return void
+     */
     public function print_contexts_section_info() {
         echo '<p>Add or remove available contexts for your appointment system. Enter one context per line.</p>';
     }
@@ -72,6 +122,12 @@ class AdminApprovalController {
     }
 
 
+
+      /**
+     * Renders the textarea field for managing contexts.
+     *
+     * @return void
+     */
      public function render_contexts_field() {
         $contexts_option = get_option( 'tan_appointment_contexts' );
         $contexts = is_array($contexts_option) ? implode( "\n", $contexts_option ) : '';
@@ -81,11 +137,16 @@ class AdminApprovalController {
         );
     }
 
+
+    /**
+     * Renders the "Pending Approvals" admin page.
+     *
+     * @return void
+     */
     public function render_pending_approvals_page() {
         // Handle approval/rejection actions
         $this->handle_actions();
 
-        // --- START OF THE FIX ---
         // The previous query was sometimes unreliable. This is the robust way.
         $args = [
             'role' => 'tan_approver',
@@ -98,56 +159,35 @@ class AdminApprovalController {
             ],
         ];
         $pending_users = get_users( $args );
-        // --- END OF THE FIX ---
-
 
         // Render the view
         include_once APPOINTMENT_MANAGER_PATH . 'templates/admin-approvals.php';
     }
 
 
+
+    /**
+     * Renders the "All Appointments" admin page.
+     *
+     * @return void
+     */
    public function render_all_appointments_page() {
-        global $wpdb;
-        $appointments_table = $wpdb->prefix . 'am_appointments';
-        $users_table = $wpdb->prefix . 'users';
-
-        // --- START OF PHASE 10 UPDATE ---
-        // Get filter values from URL
-        $filter_status = isset($_GET['filter_status']) ? sanitize_text_field($_GET['filter_status']) : '';
-        $filter_approver = isset($_GET['filter_approver']) ? intval($_GET['filter_approver']) : 0;
-
-        // Build WHERE clauses dynamically and safely
-        $where_clauses = [];
-        if (!empty($filter_status)) {
-            $where_clauses[] = $wpdb->prepare("a.status = %s", $filter_status);
-        }
-        if (!empty($filter_approver)) {
-            $where_clauses[] = $wpdb->prepare("a.approver_id = %d", $filter_approver);
-        }
-
-        $where_sql = '';
-        if (!empty($where_clauses)) {
-            $where_sql = "WHERE " . implode(' AND ', $where_clauses);
-        }
-
-        // The main query now includes the dynamic WHERE clause
-        $all_appointments = $wpdb->get_results(
-            "SELECT 
-                a.*, 
-                approver.display_name as approver_name, 
-                requester.display_name as requester_name 
-            FROM $appointments_table a
-            LEFT JOIN $users_table approver ON a.approver_id = approver.ID
-            LEFT JOIN $users_table requester ON a.requester_id = requester.ID
-            $where_sql
-            ORDER BY a.start_time DESC"
-        );
+        // The controller is now only responsible for getting user input
+        // and passing it to the model.
+        $filters = [
+            'status'      => isset($_GET['filter_status']) ? sanitize_text_field($_GET['filter_status']) : '',
+            'approver_id' => isset($_GET['filter_approver']) ? intval($_GET['filter_approver']) : 0
+        ];
+        
+        // All database logic is now handled by the Appointment model.
+        $all_appointments = Appointment::get_all_filtered( $filters );
+        // --- END OF REFACTOR ---
         
         // Data for the filter dropdowns
         $all_approvers = get_users(['role' => 'tan_approver']);
         $all_statuses = ['pending', 'approved', 'rejected', 'cancelled'];
-        // --- END OF PHASE 10 UPDATE ---
         
+        // Render the view
         include_once APPOINTMENT_MANAGER_PATH . 'templates/admin-all-appointments.php';
     }
 
@@ -178,7 +218,10 @@ class AdminApprovalController {
 
     /**
      * Sanitization callback for the contexts textarea.
-     * Converts a newline-separated string into a clean array.
+     * Converts a newline-separated string into a clean array before saving.
+     *
+     * @param string $input The raw string from the textarea.
+     * @return array The cleaned array of contexts.
      */
     public function sanitize_contexts_list( $input ) {
         if ( ! is_string( $input ) ) {
@@ -205,11 +248,11 @@ class AdminApprovalController {
 
         if ( $action === 'approve' ) {
             update_user_meta( $user_id, 'tan_status', 'active' ); // 
-            // In a future phase, we would email the user about their approval. [cite: 75]
-            $user = get_user_by('id', $user_id);
-            if ($user) {
-                \App\Services\EmailService::notifyUserOfApproval( $user->user_email, $user );
-            }
+            // for email
+            // $user = get_user_by('id', $user_id);
+            // if ($user) {
+            //     \App\Services\EmailService::notifyUserOfApproval( $user->user_email, $user );
+            // }
 
         } elseif ( $action === 'reject' ) {
             update_user_meta( $user_id, 'tan_status', 'rejected' );

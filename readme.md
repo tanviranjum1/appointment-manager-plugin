@@ -1,6 +1,6 @@
 # Appointment Management System - WordPress Plugin
 
-A flexible, reusable WordPress plugin that provides a complete system for managing appointments within different contexts (e.g., School, Hospital, Court). It allows certain users ("Approvers") to set their availability, and other users ("Requesters") from the same context to book appointments. The system includes an admin approval workflow, a full email notification system, and a detailed appointment cancellation workflow.
+A flexible, reusable WordPress plugin that provides a complete system for managing appointments within different contexts (e.g., School, Hospital, Court). It allows certain users ("Approvers") to set their availability, and other users ("Requesters") from the same context to book appointments. The system includes an admin approval workflow and a detailed appointment cancellation workflow.
 
 ## For Users: How to Use the Plugin
 

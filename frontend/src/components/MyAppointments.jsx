@@ -98,7 +98,6 @@ const MyAppointments = () => {
       ) : appointments.length === 0 ? (
         <p>No appointments found for this filter.</p>
       ) : (
-        // --- START OF FULL JSX FOR RENDERING ---
         // This section includes the full card rendering logic
         appointments.map((app) => {
           if (user_role === "tan_approver") {
@@ -211,7 +210,6 @@ const MyAppointments = () => {
           }
           return null;
         })
-        // --- END OF FULL JSX FOR RENDERING ---
       )}
 
       {totalPages > 1 && (
