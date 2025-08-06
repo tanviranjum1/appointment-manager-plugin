@@ -13,6 +13,16 @@ The system features a modern, decoupled architecture with a PHP OOP backend prov
 - **Appointment Lifecycle Management**: A complete workflow including booking, approval, rejection, and cancellation with specific business rules.
 
 ---
+## Database Structure
+The plugin maintains a clean database structure with two custom tables:
+
+| Table               | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `wp_am_appointments` | Stores appointment metadata, statuses, `cancelled_by` & `reason` columns    |
+| `wp_am_availability` | Manages time slots per Approver                                             |
+| `wp_usermeta`        | Stores context, institute & designation as user meta                        |
+
+**Migrations**: Table creation and updates are handled by migration scripts in `app/Migrations/`, which run automatically on plugin activation.
 
 ## Demonstration & Usage Guide
 
@@ -22,62 +32,63 @@ This guide demonstrates the complete workflow of the plugin, from initial setup 
 
 1. **Plugin Activation**  
    First, the administrator installs the plugin and activates it from the main WordPress "Plugins" page.  
-   ![Plugin Activation](assets/screenshots/screenshot-1.png)
+   ![Plugin Activation](assets/screenshots/screenshot-1.png?raw=true)
 
 2. **Configure Settings**  
    The administrator navigates to Appointment Admin -> Settings to define the different "contexts" for the system (e.g., Hospital, School). This is a crucial step that determines how the plugin will be used.  
-   ![Configure Settings](assets/screenshots/screenshot-2.png)
+   ![Configure Settings](assets/screenshots/screenshot-2.png?raw=true)
 
 3. **Create Frontend Pages**  
    The administrator creates the four necessary pages for the plugin's frontend interface and places the corresponding shortcode inside each one (e.g., `[tan_registration]` for the Register page).  
-   ![Create Frontend Pages](assets/screenshots/screenshot-3.png)
+   ![Create Frontend Pages](assets/screenshots/screenshot-3.png?raw=true)
+   
 
 ### User Registration and Management
 
 4. **New User Registration**  
    A new user visits the public registration page to sign up. Here, they can register as an "Approver" (like a professor), providing their designation and institute, or as a "Requester" (like a student), selecting the appropriate context.  
-   ![New User Registration](assets/screenshots/screenshot-4.png)
-   ![New User Registration](assets/screenshots/screenshot-04.png)
+   ![New User Registration](assets/screenshots/screenshot-4.png?raw=true)
+   ![New User Registration](assets/screenshots/screenshot-04.png?raw=true)
 
 5. **Admin Approval Queue**  
    After an Approver registers, they appear in the Appointment Admin -> Pending Approvers queue. The administrator can see their details and has the option to "Approve" or "Reject" their application. Once approved, they will be able to add their availability.  
-   ![Admin Approval Queue](assets/screenshots/screenshot-5.png)
+   ![Admin Approval Queue](assets/screenshots/screenshot-5.png?raw=true)
 
 ### The Approver’s Workflow
 
 6. **Setting Availability**  
    After being approved, an Approver can go to the "Approver Portal." Here they can select a date and add the specific time slots when they are available for appointments.  
-   ![Setting Availability](assets/screenshots/screenshot-6.png)
+   ![Setting Availability](assets/screenshots/screenshot-6.png?raw=true)
 
 ### The Requester’s Workflow
 
 7. **Booking an Appointment**  
    A Requester navigates to the "Book an Appointment" page. They can see a list of Approvers from their same context, view their available time slots, and click "Book Now" after providing a reason.  
-   ![Booking an Appointment](assets/screenshots/screenshot-7.png)
+   ![Booking an Appointment](assets/screenshots/screenshot-7.png?raw=true)
 
 8. **Successful Booking Confirmation**  
    After clicking "Book Now," the user receives an instant confirmation message, and the booked slot is immediately removed from the list to prevent double-booking.  
-   ![Booking Confirmation](assets/screenshots/screenshot-8.png)
+   ![Booking Confirmation](assets/screenshots/screenshot-8.png?raw=true)
 
 ### Appointment Management
 
 9. **Requester’s "My Appointments" Page**  
    The Requester can visit their "My Appointments" page at any time to track the status of all their sent requests (Pending, Approved, Rejected, etc.).  
-   ![Requester Appointments](assets/screenshots/screenshot-9.png)
+   ![Requester Appointments](assets/screenshots/screenshot-9.png?raw=true)
 
 10. **Approver’s "My Appointments" Page**  
     The Approver uses the same "My Appointments" page but has different actions available. They can manage their incoming requests by approving or rejecting them.  
-    ![Approver Appointments](assets/screenshots/screenshot-10.png)
+    ![Approver Appointments](assets/screenshots/screenshot-10.png?raw=true)
 
 ### Data and System Overview
 
 11. **Admin Appointment Log**  
     The administrator can get a powerful overview by navigating to Appointment Admin -> All Appointments. Here they can see a filterable master log of every appointment in the system.  
-    ![Admin Appointment Log](assets/screenshots/screenshot-11.png)
+    ![Admin Appointment Log](assets/screenshots/screenshot-11.png?raw=true)
 
 12. **Database Structure**  
     The plugin creates two custom tables (`wp_am_appointments` and `wp_am_availability`) to store its data. It also adds new roles (`approver`, `requester`) and saves custom user data (institute, designation, context) to the `wp_usermeta` table.  
-    ![Database Structure](assets/screenshots/screenshot-12.png)
+    ![Database Structure](assets/screenshots/screenshot-12.png?raw=true)
 
 ---
 
@@ -98,3 +109,8 @@ This section provides instructions for setting up a local development environmen
    ```bash
    cd path/to/wp-content/plugins/appointment-manager/frontend/
    ```
+3. npm install       # Install dependencies
+   npm run build     # Create optimized build
+In WordPress admin:
+   Activate the plugin
+   Crucially: Go to Settings → Permalinks and click "Save Changes" to flush rewrite rules and activate REST API endpoints
